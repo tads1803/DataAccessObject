@@ -9,6 +9,7 @@ import com.portuary.dem.Movimentacao;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -54,14 +55,70 @@ public class Movimentacao_DAO extends BaseDAO {
     
     /**
      * Utilizado para retornar a lista completa
+     * @param filtro JSONObject contendo o filtro
      * @return Lista de Container contendo os dados do registro solicitado
      * @throws java.lang.Exception
      */
-    public JSONObject getRelatorioByMovimentacao() throws Exception {
+    public JSONObject getRelatorioByMovimentacao(JSONObject filtro) throws Exception {
         PreparedStatement pt = null;
         Connection cn = null;
         ResultSet rs = null;
         try {
+            
+            JSONObject params = (filtro.has("params") ? filtro.getJSONObject("params") : new JSONObject());
+            
+            /*
+             * Utilizado para criar uma cláusula WHERE para cliente
+             */
+            // Armazena os filtros a serem aplicados
+            String whereCliente = new String();
+            
+            if (params.has("cliente")){ whereCliente += "(cliente.va_cpf_cnpj LIKE ?)"; }
+            
+            // Verifica se foi adicionado algo para ser filtrado
+            if (!whereCliente.isEmpty()) { whereCliente = " WHERE " + whereCliente; }
+            
+            /*------------------------------------------------------*/
+            
+            /*
+             * Utilizado para criar uma cláusula WHERE para container
+             */
+            // Armazena os filtros a serem aplicados
+            String whereContainer = new String();
+            
+            if (params.has("container")){ whereContainer += "(container.va_numero LIKE ?)"; }
+            
+            // Verifica se foi adicionado algo para ser filtrado
+            if (!whereContainer.isEmpty()) { whereContainer = " AND " + whereContainer; }
+            
+            /*------------------------------------------------------*/
+            
+            /*
+             * Utilizado para criar uma cláusula WHERE para container
+             */
+            // Armazena os filtros a serem aplicados
+            String whereDataIniciadoDe = new String();
+            
+            if (params.has("dataIniciadoDe")){ whereDataIniciadoDe += "(movimentacao.ts_data_inicio >= ?)"; }
+            
+            // Verifica se foi adicionado algo para ser filtrado
+            if (!whereDataIniciadoDe.isEmpty()) { whereDataIniciadoDe = " AND " + whereDataIniciadoDe; }
+            
+            /*------------------------------------------------------*/
+            
+            /*
+             * Utilizado para criar uma cláusula WHERE para container
+             */
+            // Armazena os filtros a serem aplicados
+            String whereDataIniciadoAte = new String();
+            
+            if (params.has("dataIniciadoAte")){ whereDataIniciadoAte += "(movimentacao.ts_data_inicio <= ?)"; }
+            
+            // Verifica se foi adicionado algo para ser filtrado
+            if (!whereDataIniciadoAte.isEmpty()) { whereDataIniciadoAte = " AND " + whereDataIniciadoAte; }
+            
+            /*------------------------------------------------------*/
+            
             String query = new String();
             
             query += 
@@ -81,22 +138,35 @@ public class Movimentacao_DAO extends BaseDAO {
                     + "                                        WHERE "
                     + "                                        (container.id_cliente = cliente.id_cliente) "
                     + "                                        AND "
-                    + "                                        (movimentacao.id_tipo_movimentacao = tipoMov.id_tipo_movimentacao)) "
+                    + "                                        (movimentacao.id_tipo_movimentacao = tipoMov.id_tipo_movimentacao)"
+                    + "                                        "+ whereContainer + whereDataIniciadoDe + whereDataIniciadoAte + ") "
                     + "                     )"
                     + "                 )"
                     + "              FROM tb_tipo_movimentacao AS tipoMov)"
                     + "     )"
                     + ") AS lista "
-                    + "FROM tb_cliente AS cliente";
+                    + "FROM tb_cliente AS cliente" + whereCliente;
             
             cn = openConnection(dbName);
             pt = cn.prepareStatement(query);
+            
+            int i = 1;
+            
+            if (params.has("container")){ pt.setString(i++, "%" + params.getString("container") + "%"); }
+            if (params.has("dataIniciadoDe")){ pt.setTimestamp(i++, Timestamp.valueOf((params.getString("dataIniciadoDe").replace("T"," ")+":00"))); }
+            if (params.has("dataIniciadoAte")){ pt.setTimestamp(i++, Timestamp.valueOf((params.getString("dataIniciadoAte").replace("T"," ")+":00"))); }
+            
+            if (params.has("cliente")){ pt.setString(i++, "%" + params.getString("cliente") + "%"); }
+            
+            System.out.println(pt);
+            
             rs = pt.executeQuery();
             if (rs.next()){
-                return (new JSONObject()).put("lista", new JSONArray(rs.getString("lista")));
-            }else{
-                return (new JSONObject().put("lista", new JSONArray()));
+                String lista = rs.getString("lista");
+                if (lista != null)
+                    return (new JSONObject()).put("lista", new JSONArray(lista));
             }
+            return (new JSONObject().put("lista", new JSONArray()));
         } catch (Exception e) {
             throw e;
         } finally {

@@ -1,6 +1,7 @@
 
 import com.portuary.dao.ConnectionFactory;
 import com.portuary.dao.Container_DAO;
+import org.json.JSONObject;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -20,7 +21,13 @@ public class RelatorioCategoria {
         // TODO code application logic here
         try{
             
-            System.out.println((new Container_DAO()).getRelatorioByCategoria());
+            System.out.println((new Container_DAO()).getRelatorioByCategoria(
+                    new JSONObject()
+                            .put("params", new JSONObject()
+                                .put("cliente", "00000000000")
+                                .put("container", "ASDF1234567")
+                            )
+            ));
             
         }catch(Exception ex){
             ex.printStackTrace();

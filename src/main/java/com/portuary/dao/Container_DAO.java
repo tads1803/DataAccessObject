@@ -82,14 +82,44 @@ public class Container_DAO extends BaseDAO {
     
     /**
      * Utilizado para retornar a lista completa
+     * @param filtro JSONObject contendo o filtro
      * @return Lista de Container contendo os dados do registro solicitado
      * @throws java.lang.Exception
      */
-    public JSONObject getRelatorioByCategoria() throws Exception {
+    public JSONObject getRelatorioByCategoria(JSONObject filtro) throws Exception {
         PreparedStatement pt = null;
         Connection cn = null;
         ResultSet rs = null;
         try {
+            
+            JSONObject params = (filtro.has("params") ? filtro.getJSONObject("params") : new JSONObject());
+            
+            /*
+             * Utilizado para criar uma cláusula WHERE para cliente
+             */
+            // Armazena os filtros a serem aplicados
+            String whereCliente = new String();
+            
+            if (params.has("cliente")){ whereCliente += "(cliente.va_cpf_cnpj LIKE ?)"; }
+            
+            // Verifica se foi adicionado algo para ser filtrado
+            if (!whereCliente.isEmpty()) { whereCliente = " WHERE " + whereCliente; }
+            
+            /*------------------------------------------------------*/
+            
+            /*
+             * Utilizado para criar uma cláusula WHERE para container
+             */
+            // Armazena os filtros a serem aplicados
+            String whereContainer = new String();
+            
+            if (params.has("container")){ whereContainer += "(container.va_numero LIKE ?)"; }
+            
+            // Verifica se foi adicionado algo para ser filtrado
+            if (!whereContainer.isEmpty()) { whereContainer = " AND " + whereContainer; }
+            
+            /*------------------------------------------------------*/
+            
             String query = new String();
             
             query += 
@@ -108,22 +138,33 @@ public class Container_DAO extends BaseDAO {
                     + "                                        WHERE "
                     + "                                        (container.id_cliente = cliente.id_cliente) "
                     + "                                        AND "
-                    + "                                        (container.id_categoria_container = categoria.id_categoria_container)) "
+                    + "                                        (container.id_categoria_container = categoria.id_categoria_container)"
+                    + "                                        "+ whereContainer +") "
                     + "                     )"
                     + "                 )"
                     + "              FROM tb_categoria_container AS categoria)"
                     + "     )"
                     + ") AS lista "
-                    + "FROM tb_cliente AS cliente";
+                    + "FROM tb_cliente AS cliente " + whereCliente;
             
             cn = openConnection(dbName);
             pt = cn.prepareStatement(query);
+            
+            int i = 1;
+            
+            if (params.has("container")){ pt.setString(i++, "%" + params.getString("container") + "%"); }
+            if (params.has("cliente")){ pt.setString(i++, "%" + params.getString("cliente") + "%"); }
+            
+            System.out.println(pt);
+            
             rs = pt.executeQuery();
             if (rs.next()){
-                return (new JSONObject()).put("lista", new JSONArray(rs.getString("lista")));
-            }else{
-                return (new JSONObject().put("lista", new JSONArray()));
+                String lista = rs.getString("lista");
+                if (lista != null)
+                    return (new JSONObject()).put("lista", new JSONArray(lista));
             }
+            
+            return (new JSONObject().put("lista", new JSONArray()));
         } catch (Exception e) {
             throw e;
         } finally {
