@@ -155,8 +155,6 @@ public class Container_DAO extends BaseDAO {
             if (params.has("container")){ pt.setString(i++, "%" + params.getString("container") + "%"); }
             if (params.has("cliente")){ pt.setString(i++, "%" + params.getString("cliente") + "%"); }
             
-            System.out.println(pt);
-            
             rs = pt.executeQuery();
             if (rs.next()){
                 String lista = rs.getString("lista");
