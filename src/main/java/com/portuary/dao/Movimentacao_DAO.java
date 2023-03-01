@@ -99,7 +99,8 @@ public class Movimentacao_DAO extends BaseDAO {
             // Armazena os filtros a serem aplicados
             String whereDataIniciadoDe = new String();
             
-            if (params.has("dataIniciadoDe")){ whereDataIniciadoDe += "(movimentacao.ts_data_inicio >= ?)"; }
+            if (params.has("dataIniciadoDe") && !params.getString("dataIniciadoDe").isEmpty())
+            { whereDataIniciadoDe += "(movimentacao.ts_data_inicio >= ?)"; }
             
             // Verifica se foi adicionado algo para ser filtrado
             if (!whereDataIniciadoDe.isEmpty()) { whereDataIniciadoDe = " AND " + whereDataIniciadoDe; }
@@ -112,7 +113,8 @@ public class Movimentacao_DAO extends BaseDAO {
             // Armazena os filtros a serem aplicados
             String whereDataIniciadoAte = new String();
             
-            if (params.has("dataIniciadoAte")){ whereDataIniciadoAte += "(movimentacao.ts_data_inicio <= ?)"; }
+            if (params.has("dataIniciadoAte") && !params.getString("dataIniciadoAte").isEmpty())
+            { whereDataIniciadoAte += "(movimentacao.ts_data_inicio <= ?)"; }
             
             // Verifica se foi adicionado algo para ser filtrado
             if (!whereDataIniciadoAte.isEmpty()) { whereDataIniciadoAte = " AND " + whereDataIniciadoAte; }
