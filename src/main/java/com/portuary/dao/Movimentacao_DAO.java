@@ -155,8 +155,10 @@ public class Movimentacao_DAO extends BaseDAO {
             int i = 1;
             
             if (params.has("container")){ pt.setString(i++, "%" + params.getString("container") + "%"); }
-            if (params.has("dataIniciadoDe")){ pt.setTimestamp(i++, Timestamp.valueOf((params.getString("dataIniciadoDe").replace("T"," ")+":00"))); }
-            if (params.has("dataIniciadoAte")){ pt.setTimestamp(i++, Timestamp.valueOf((params.getString("dataIniciadoAte").replace("T"," ")+":00"))); }
+            if (params.has("dataIniciadoDe") && !params.getString("dataIniciadoDe").isEmpty())
+                { pt.setTimestamp(i++, Timestamp.valueOf((params.getString("dataIniciadoDe").replace("T"," ")+":00"))); }
+            if (params.has("dataIniciadoAte") && !params.getString("dataIniciadoAte").isEmpty())
+                { pt.setTimestamp(i++, Timestamp.valueOf((params.getString("dataIniciadoAte").replace("T"," ")+":00"))); }
             
             if (params.has("cliente")){ pt.setString(i++, "%" + params.getString("cliente") + "%"); }
             
